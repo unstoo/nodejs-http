@@ -47,7 +47,7 @@ const unifiedServer = (request, response) => {
   // Get the path
   const path = parsedUrl.pathname
   
-  const trimmedPath = '/' 
+  let trimmedPath = '/' 
   
   if (path !== '/')
     trimmedPath = path.replace(/^\/+|\/+$/g,'')
