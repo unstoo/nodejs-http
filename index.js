@@ -99,7 +99,7 @@ const unifiedServer = (request, response) => {
       'headers' : headers,
     }
     
-    const payload = data
+    let payload = data
 
     chosenHandler(data, (statusCode, payload) => {
       statusCode = typeof(statusCode) === 'number' ? statusCode : 200
