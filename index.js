@@ -42,7 +42,7 @@ const unifiedServer = (request, response) => {
   let trimmedPath = '/' 
   
   if (path !== '/')
-    path = path.replace(/^\/+|\/+$/g,'')
+    trimmedPath = path.replace(/^\/+|\/+$/g,'')
 
   // Get the query string as an object
   const queryStringObject = parsedUrl.query
