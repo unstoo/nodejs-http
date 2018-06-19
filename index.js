@@ -5,8 +5,6 @@ const fs = require('fs')
 const StringDecoder = require('string_decoder').StringDecoder
 const config = require('./config')
 
-const storage = []
-
 const httpServer = http.createServer((req, res) => {
   unifiedServer(req,res)
 })
@@ -40,7 +38,11 @@ const unifiedServer = (request, response) => {
 
   // Get the path
   const path = parsedUrl.pathname
-  const trimmedPath = path.replace(/^\/+|\/+$/g,'')
+  
+  let trimmedPath = '/' 
+  
+  if (path !== '/')
+    path = path.replace(/^\/+|\/+$/g,'')
 
   // Get the query string as an object
   const queryStringObject = parsedUrl.query
@@ -107,7 +109,6 @@ const unifiedServer = (request, response) => {
   
 }
 
-
 // Define handlers
 var handlers = {}
 
@@ -115,8 +116,12 @@ handlers.ping = (data, callback) => {
   callback(200)
 }
 
+handlers['/'] = (data, callback) => {
+  callback(200)
+}
+
 handlers.hook = (data, callback) => {
-  fs.writeFile('./data/' + (Date.now().toString()), JSON.stringify(data), (err) => {
+  fs.writeFile('./data/' + (Date.now().toString()), JSON.stringify(data, null, 2), (err) => {
     if (err) throw err;
     console.log('The file has been saved!');
   });
@@ -131,6 +136,7 @@ handlers.notFound = (data, callback) => {
 // Define a request router
 var router = {
   'ping': handlers.ping,
-  'hook': handlers.hook
+  'hook': handlers.hook,
+  '/': handlers['/']
 }
 
