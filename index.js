@@ -2,8 +2,16 @@ const http = require('http')
 const https = require('https')
 const url = require('url')
 const fs = require('fs')
+const util = require('util')
 const StringDecoder = require('string_decoder').StringDecoder
 const config = require('./config')
+
+var log_file_err = fs.createWriteStream(__dirname + '/error.log', {flags:'a'})  
+
+process.on('uncaughtException', function(err) {
+console.log('Caught exception: ' + err)
+log_file_err.write(util.format('Caught exception: '+err) + '\n')
+})
 
 const httpServer = http.createServer((req, res) => {
   unifiedServer(req,res)
@@ -39,7 +47,7 @@ const unifiedServer = (request, response) => {
   // Get the path
   const path = parsedUrl.pathname
   
-  let trimmedPath = '/' 
+  const trimmedPath = '/' 
   
   if (path !== '/')
     trimmedPath = path.replace(/^\/+|\/+$/g,'')
@@ -57,6 +65,15 @@ const unifiedServer = (request, response) => {
   // the payload (body) comes in as a stream, not a whole thing
   var decoder = new StringDecoder('utf-8')
   var buffer = ''
+
+  request.on('error', err => {
+    console.error(err.stack)
+    log_file_err.write(util.format('request error: '+err) + '\n')
+  })
+  response.on('error', err => {
+    console.error(err.stack)
+    log_file_err.write(util.format('response error: '+err) + '\n')
+  })
 
   request.on('data', data => {
     buffer += decoder.write(data)
@@ -98,8 +115,6 @@ const unifiedServer = (request, response) => {
       console.log('Returning this response: ', statusCode, payloadString);
     })
 
-  }).on('error', err => {
-    console.error(err.stack)
   })
 
   // Log the request info
