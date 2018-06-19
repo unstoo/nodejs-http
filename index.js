@@ -5,6 +5,8 @@ const fs = require('fs')
 const StringDecoder = require('string_decoder').StringDecoder
 const config = require('./config')
 
+const storage = []
+
 const httpServer = http.createServer((req, res) => {
   unifiedServer(req,res)
 })
@@ -53,17 +55,18 @@ const unifiedServer = (request, response) => {
   // the payload (body) comes in as a stream, not a whole thing
   var decoder = new StringDecoder('utf-8')
   var buffer = ''
+
   request.on('data', data => {
-    console.log('\na chunk: ' + decoder.write(data));
     buffer += decoder.write(data)
   }).on('end', () => {
     buffer += decoder.end()
     // Choose the handler this request should go to.
 
     const chosenHandler = typeof(router[trimmedPath]) !== 'undefined' ? handlers[trimmedPath] : handlers.notFound
-
+    
     try {
       buffer = JSON.parse(buffer)
+
     } catch (e) {
       console.info('Couldn\'t parse body of a request.')
       buffer = {}
@@ -75,7 +78,9 @@ const unifiedServer = (request, response) => {
       'query' : queryStringObject,
       'body' : buffer,
       'headers' : headers,
-    }      
+    }
+    
+    const payload = data
 
     chosenHandler(data, (statusCode, payload) => {
       statusCode = typeof(statusCode) === 'number' ? statusCode : 200
@@ -89,7 +94,6 @@ const unifiedServer = (request, response) => {
       response.end(payloadString)
       
       console.log('Returning this response: ', statusCode, payloadString);
-      
     })
 
   }).on('error', err => {
@@ -111,6 +115,14 @@ handlers.ping = (data, callback) => {
   callback(200)
 }
 
+handlers.hook = (data, callback) => {
+  fs.writeFile('./data/' + (Date.now().toString()), JSON.stringify(data), (err) => {
+    if (err) throw err;
+    console.log('The file has been saved!');
+  });
+  callback(200)
+}
+
 // Not found handler
 handlers.notFound = (data, callback) => {
   callback(404)
@@ -119,6 +131,6 @@ handlers.notFound = (data, callback) => {
 // Define a request router
 var router = {
   'ping': handlers.ping,
-  'hook': handlers.ping
+  'hook': handlers.hook
 }
 
