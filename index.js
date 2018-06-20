@@ -10,7 +10,7 @@ var log_file_err = fs.createWriteStream(__dirname + '/error.log', {flags:'a'})
 
 process.on('uncaughtException', function(err) {
 console.log('Caught exception: ' + err)
-log_file_err.write(util.format('Caught exception: '+err) + '\n')
+log_file_err.write(util.format((new Date).toGMTString() + ' Caught exception: '+err) + '\n')
 })
 
 const httpServer = http.createServer((req, res) => {
@@ -139,6 +139,8 @@ handlers.hook = (data, callback) => {
   fs.writeFile('./data/' + ((new Date).toISOString()), JSON.stringify(data, null, 2), (err) => {
     if (err) throw err;
     console.log('The file has been saved!');
+    console.log((new Date).toGMTString())
+    console.log('\n')
   });
   callback(200)
 }
